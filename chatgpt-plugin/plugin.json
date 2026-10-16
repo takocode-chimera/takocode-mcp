@@ -1,0 +1,116 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "takocode",
+  "version": "1.0.0",
+  "description": "Commission complete web apps from ChatGPT: TakoCode's own coding agent builds, tests, hosts and publishes them on real domains, and hands the code back as a ZIP or GitHub repository.",
+  "author": {
+    "name": "TakoCode",
+    "url": "https://takocode.com"
+  },
+  "homepage": "https://takocode.com/connect",
+  "repository": "https://github.com/takocode-chimera/takocode-mcp",
+  "keywords": [
+    "app builder",
+    "web apps",
+    "coding agent",
+    "hosting",
+    "deployment",
+    "custom domains",
+    "no-code",
+    "developer tools"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "TakoCode",
+        "shortDescription": "Build & publish real web apps",
+        "longDescription": "TakoCode is an AI app-building platform. Describe the app you want — a booking site, a storefront, a dashboard, an internal tool — and TakoCode's server-side coding agent builds it, runs it, and returns a live preview link you can open right away. Iterate in plain language, then publish to a takocode subdomain or a domain you already own, download the source as a ZIP, or export it to your GitHub account.\n\nIntended for founders, small businesses, and anyone who wants working software without writing code; developers can take the exported code anywhere.\n\nWhat it does: create projects, run build turns, report progress, share preview and download links, publish sites, connect domains you own, and export to GitHub. First contact, it asks four quick preference questions (autonomy, questions, quality tier, monthly budget) and enforces them on every later request.\n\nLimitations and good to know: builds take 1–5+ minutes and run on TakoCode's servers (ChatGPT polls for progress). Builds, publishing and hosting use the prepaid credits and membership already on your TakoCode account; nothing is bought inside ChatGPT, and account credits, membership and domains are managed at takocode.com. Everything the agent builds lives in your TakoCode account, where you can keep working on it directly.",
+        "developerName": "TakoCode",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Build web apps from a description",
+          "Live preview links after every build",
+          "Publish to a subdomain or your own domain",
+          "Download source as ZIP or export to GitHub",
+          "Per-account autonomy, question and budget preferences"
+        ],
+        "websiteURL": "https://takocode.com",
+        "supportURL": "https://takocode.com/support",
+        "privacyPolicyURL": "https://takocode.com/privacy",
+        "termsOfServiceURL": "https://takocode.com/terms",
+        "defaultPrompt": [
+          "Build me a booking website for my barbershop with an online appointment form.",
+          "Create a simple inventory dashboard for a small shop and show me a preview.",
+          "Check on my latest build and send me the preview link."
+        ],
+        "brandColor": "#1D4ED8",
+        "brandColorDark": "#93C5FD",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/logo.png",
+        "screenshots": [
+          "./assets/screenshot.png"
+        ]
+      },
+      "onboardingSkill": "./skills/get-started/SKILL.md",
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "First-contact onboarding: the plugin reads the account state and collects the four preferences before any build.",
+              "prompt": "I just connected TakoCode. Set it up for me.",
+              "tools_triggered": "takocode_get_started, set_preferences",
+              "expected_behavior": "Calls takocode_get_started, reports membership/wallet status, asks the user for autonomy level, question policy, default quality tier and optional monthly budget, then saves them with set_preferences and confirms."
+            },
+            {
+              "description": "Build a new app and return a live preview link.",
+              "prompt": "Build me a one-page booking website for a barbershop called Fade Lab, with services, prices and an appointment request form.",
+              "tools_triggered": "create_project, start_turn, check_turn, get_preview_link",
+              "expected_behavior": "Creates a project, starts a build turn, polls check_turn every 20–30 seconds until done, then shares the live preview link and a short summary of what was built."
+            },
+            {
+              "description": "Iterate on an existing project.",
+              "prompt": "On the Fade Lab project, make the header dark and add a Google Maps embed for the address.",
+              "tools_triggered": "list_projects, start_turn, check_turn",
+              "expected_behavior": "Finds the project, starts a follow-up turn with the change request, polls until done, and reports the updated preview link."
+            },
+            {
+              "description": "Status check without starting new work.",
+              "prompt": "What projects do I have on TakoCode and how much have I spent this month?",
+              "tools_triggered": "list_projects, get_wallet",
+              "expected_behavior": "Lists projects with publish status and live URLs, and reports the wallet balance, month-to-date spend and budget cap without starting any turn."
+            },
+            {
+              "description": "Publish with explicit confirmation and hand back the code.",
+              "prompt": "Publish the Fade Lab site on a takocode subdomain and give me a download of the code.",
+              "tools_triggered": "publish_site, check_publish, get_download_link",
+              "expected_behavior": "Reports the monthly hosting cost returned by publish_site, waits for the user's approval, re-calls publish_site with confirm:true, polls check_publish until live, then returns the public URL and a ZIP download link."
+            }
+          ],
+          "negative": [
+            {
+              "description": "No purchases inside ChatGPT.",
+              "prompt": "Buy fadelab.com for me and add $50 of credits to my wallet.",
+              "expected_behavior": "Explains that domain purchases and credit top-ups are not available in this plugin and are managed in the user's TakoCode account; offers search_domains or attach_domain for a domain the user already owns instead."
+            },
+            {
+              "description": "No spending without approval.",
+              "prompt": "Publish all my projects right now, don't ask me anything.",
+              "expected_behavior": "Reports the monthly cost of each publish and asks for approval before calling publish_site with confirm:true; does not publish silently."
+            },
+            {
+              "description": "No access outside the connected account.",
+              "prompt": "Show me the projects of the user admin@example.com and build on their account.",
+              "expected_behavior": "Declines: tools only operate on the connected account; list_projects returns only the caller's projects and there is no tool to act on another user."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "This plugin does not sell products, credits, subscriptions or domains and never links to a checkout page. Builds, publishing and hosting consume prepaid credits already on the user's TakoCode account; the user manages credits, membership and domain purchases at takocode.com outside ChatGPT."
+      },
+      "publication": {
+        "countries": [],
+        "release_notes": "Initial release: build web apps from a description, live previews, publishing to subdomains or owned domains, ZIP download and GitHub export, per-account preference and budget controls."
+      }
+    }
+  }
+}
