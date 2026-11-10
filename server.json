@@ -1,18 +1,19 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.takocode/takocode",
-  "title": "TakoCode",
-  "description": "Build, preview and publish full-stack web apps with TakoCode's hosted coding agent.",
-  "version": "1.0.0",
-  "websiteUrl": "https://takocode.com",
+  "title": "TakoCode — AI app builder",
+  "description": "Build, preview, publish and host full-stack web apps with TakoCode's coding agent; domains included.",
+  "version": "1.1.0",
+  "websiteUrl": "https://takocode.com/connect",
   "repository": {
     "url": "https://github.com/takocode-chimera/takocode-mcp",
     "source": "github"
   },
+  "icons": [
+    { "src": "https://takocode.com/icon-192.png", "mimeType": "image/png", "sizes": ["192x192"] },
+    { "src": "https://takocode.com/icon-512.png", "mimeType": "image/png", "sizes": ["512x512"] }
+  ],
   "remotes": [
-    {
-      "type": "streamable-http",
-      "url": "https://takocode.com/api/mcp"
-    }
+    { "type": "streamable-http", "url": "https://takocode.com/api/mcp" }
   ]
 }
