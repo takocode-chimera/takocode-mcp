@@ -37,6 +37,9 @@ Full guide: [takocode.com/connect](https://takocode.com/connect).
 | `create_project`       |           | all             | Create a new app project                                                    |
 | `start_turn`           | **paid**  | all             | Send one build goal to TakoCode's coding agent (async; billed from wallet)  |
 | `check_turn`           | read-only | all             | Poll build progress; final message, cost, files, optional screenshot        |
+| `revert_turn`          |           | all             | Undo a build turn — restore files (optionally the database) to an earlier checkpoint |
+| `query_codebase`       | read-only | all             | Project structure, symbols and full-text search over the source             |
+| `security_scan`        | read-only | all             | Dependency vulnerability + update scan (OSV / npm registry)                 |
 | `get_preview_link`     | read-only | all             | Shareable ~4h link to the running dev app                                   |
 | `get_download_link`    | read-only | all             | Signed 1h ZIP download of the project source                                |
 | `export_github`        |           | all             | Push project source to the user's connected GitHub                          |
@@ -51,7 +54,8 @@ Full guide: [takocode.com/connect](https://takocode.com/connect).
 - **Your assistant orchestrates; TakoCode builds.** The billable unit is an agent *turn*: one clear goal in, working code out. Long-running work is start/poll (`start_turn` → `check_turn`), so it survives client timeouts and disconnects.
 - **Money is never autonomous.** The assistant can never charge anyone: wallet top-ups and domain purchases return Stripe checkout links that only the human can complete, and publishing requires explicit user approval (plus per-user autonomy preferences and an optional monthly budget cap, enforced server-side).
 - **Two surfaces, one server.** `/api/mcp` is the full tool set. `/api/mcp/chatgpt` is the ChatGPT-directory surface: OpenAI's plugin guidelines do not allow directory plugins to sell credits, subscriptions or domains, promote upgrades, or link to checkout pages, so that surface omits `top_up_wallet` and `buy_domain` and describes entitlement gaps as "not available with the account's current membership or balance" with an informational link to the plans page only. Builds and publishing use the prepaid credits already on the account on both surfaces.
-- **Every tool carries MCP annotations** (`readOnlyHint` / `destructiveHint` / `openWorldHint` as explicit booleans, plus `title`) so clients can gate confirmations appropriately.
+- **Every tool carries all four MCP annotations** (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint` as explicit booleans, plus `title`) so clients can gate confirmations appropriately. The per-tool values and the reasoning behind each are in [docs/TOOL-ANNOTATIONS.md](docs/TOOL-ANNOTATIONS.md).
+- **The tool catalogue is public.** `tools/list` and `ping` answer without authentication (names, descriptions, schemas, annotations only); every other method returns the OAuth challenge. Registries and directories can therefore list the 20 tools without an account.
 
 ## Security & privacy
 
