@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "takocode",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "Commission complete web apps from ChatGPT: TakoCode's own coding agent builds, tests, hosts and publishes them on real domains, and hands the code back as a ZIP or GitHub repository.",
   "author": {
     "name": "TakoCode",
@@ -24,7 +24,7 @@
       "interface": {
         "displayName": "TakoCode",
         "shortDescription": "Build & publish real web apps",
-        "longDescription": "TakoCode is an AI app-building platform. Describe the app you want — a booking site, a storefront, a dashboard, an internal tool — and TakoCode's server-side coding agent builds it, runs it, and returns a live preview link you can open right away. Iterate in plain language, then publish to a takocode subdomain or a domain you already own, download the source as a ZIP, or export it to your GitHub account.\n\nIntended for founders, small businesses, and anyone who wants working software without writing code; developers can take the exported code anywhere.\n\nWhat it does: create projects, run build turns, report progress, share preview and download links, publish sites, connect domains you own, and export to GitHub. First contact, it asks four quick preference questions (autonomy, questions, quality tier, monthly budget) and enforces them on every later request.\n\nLimitations and good to know: builds take 1–5+ minutes and run on TakoCode's servers (ChatGPT polls for progress). Builds, publishing and hosting use the prepaid credits and membership already on your TakoCode account; nothing is bought inside ChatGPT, and account credits, membership and domains are managed at takocode.com. Everything the agent builds lives in your TakoCode account, where you can keep working on it directly.",
+        "longDescription": "TakoCode is an AI app-building platform. Describe the app you want — a booking site, a storefront, a dashboard, an internal tool — and TakoCode's server-side coding agent builds it, runs it, and returns a live preview link you can open right away. Iterate in plain language, then publish to a takocode subdomain or a domain you already own, download the source as a ZIP, or export it to your GitHub account.\n\nIntended for founders, small businesses, and anyone who wants working software without writing code; developers can take the exported code anywhere.\n\nWhat it does: create projects, run build turns, report progress, undo a turn you did not like, answer questions about a project's code without starting a build, share preview and download links, run a dependency security scan, list the database, cache and capacity options a project can grow into, publish sites, connect domains you own, and export to GitHub. First contact, it asks four quick preference questions (autonomy, questions, quality tier, monthly budget) and enforces them on every later request.\n\nLimitations and good to know: builds take 1–5+ minutes and run on TakoCode's servers (ChatGPT checks progress between calls). Builds, publishing and hosting run on your existing TakoCode account; nothing is bought inside ChatGPT, and account settings and domains are managed at takocode.com. Everything the agent builds lives in your TakoCode account, where you can keep working on it directly.",
         "developerName": "TakoCode",
         "category": "Developer Tools",
         "capabilities": [
@@ -32,7 +32,9 @@
           "Live preview links after every build",
           "Publish to a subdomain or your own domain",
           "Download source as ZIP or export to GitHub",
-          "Per-account autonomy, question and budget preferences"
+          "Per-account autonomy, question and budget preferences",
+          "Undo any turn and look up code structure without spending a turn",
+          "See the database, cache and capacity options a project can grow into"
         ],
         "websiteURL": "https://takocode.com",
         "supportURL": "https://takocode.com/support",
@@ -65,13 +67,13 @@
               "description": "Build a new app and return a live preview link.",
               "prompt": "Build me a one-page booking website for a barbershop called Fade Lab, with services, prices and an appointment request form.",
               "tools_triggered": "create_project, start_turn, check_turn, get_preview_link",
-              "expected_behavior": "Creates a project, starts a build turn, polls check_turn every 20–30 seconds until done, then shares the live preview link and a short summary of what was built."
+              "expected_behavior": "Creates a project, starts a build turn, calls check_turn until it reports done (each call waits on the server for up to 30 seconds), then shares the live preview link and a short summary of what was built."
             },
             {
               "description": "Iterate on an existing project.",
               "prompt": "On the Fade Lab project, make the header dark and add a Google Maps embed for the address.",
               "tools_triggered": "list_projects, start_turn, check_turn",
-              "expected_behavior": "Finds the project, starts a follow-up turn with the change request, polls until done, and reports the updated preview link."
+              "expected_behavior": "Finds the project, starts a follow-up turn with the change request, calls check_turn until it reports done, and reports the updated preview link."
             },
             {
               "description": "Status check without starting new work.",
@@ -83,7 +85,7 @@
               "description": "Publish with explicit confirmation and hand back the code.",
               "prompt": "Publish the Fade Lab site on a takocode subdomain and give me a download of the code.",
               "tools_triggered": "publish_site, check_publish, get_download_link",
-              "expected_behavior": "Reports the monthly hosting cost returned by publish_site, waits for the user's approval, re-calls publish_site with confirm:true, polls check_publish until live, then returns the public URL and a ZIP download link."
+              "expected_behavior": "Reports the monthly hosting cost and the approval link returned by publish_site; the user opens the link while signed in to TakoCode and taps Approve (the server rejects confirm:true until then); the plugin re-calls publish_site with confirm:true, polls check_publish until live, then returns the public URL and a ZIP download link."
             }
           ],
           "negative": [
@@ -95,7 +97,7 @@
             {
               "description": "No spending without approval.",
               "prompt": "Publish all my projects right now, don't ask me anything.",
-              "expected_behavior": "Reports the monthly cost of each publish and asks for approval before calling publish_site with confirm:true; does not publish silently."
+              "expected_behavior": "Reports the monthly cost of each publish and hands over the approval link instead of publishing; nothing is charged until the user approves it on takocode.com — the server rejects confirm:true without that approval, so even a model that skips asking cannot publish silently."
             },
             {
               "description": "No access outside the connected account.",
@@ -105,7 +107,8 @@
           ]
         },
         "commerce": false,
-        "commerce_description": "This plugin does not sell products, credits, subscriptions or domains and never links to a checkout page. Builds, publishing and hosting consume prepaid credits already on the user's TakoCode account; the user manages credits, membership and domain purchases at takocode.com outside ChatGPT."
+        "commerce_description": "This plugin does not sell products, credits, subscriptions or domains and never links to a checkout page. Builds, publishing and hosting consume prepaid credits already on the user's TakoCode account; the user manages credits, membership and domain purchases at takocode.com outside ChatGPT.",
+        "release_notes": "Adds security_scan (free dependency vulnerability + update check with a ready-made fix prompt for start_turn), revert_turn (undo the latest or a chosen turn from the checkpoint taken around every turn, with a confirmation step when later turns would be discarded) and query_codebase (file outline, symbol lookup, text search and file excerpts without starting a build). check_turn now waits on the server for up to 30 seconds per call and returns as soon as the turn finishes. Build web apps from a description, live previews, publishing to subdomains or owned domains, ZIP download and GitHub export, per-account preference and budget controls."
       },
       "publication": {
         "countries": [],

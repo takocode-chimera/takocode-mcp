@@ -1,6 +1,6 @@
 # TakoCode MCP tool annotations
 
-Every tool on `https://takocode.com/api/mcp` sets all four MCP tool hints as explicit booleans (never omitted/null). The table is generated from the server source , so it cannot drift from what `tools/list` returns.
+Every tool on `https://takocode.com/api/mcp` sets all four MCP tool hints as explicit booleans (never omitted/null). The table is generated from the server source, so it cannot drift from what `tools/list` returns.
 
 | Tool | readOnly | destructive | idempotent | openWorld |
 |---|---|---|---|---|
@@ -21,6 +21,8 @@ Every tool on `https://takocode.com/api/mcp` sets all four MCP tool hints as exp
 | `export_github` | false | true | false | true |
 | `publish_site` | false | true | false | true |
 | `check_publish` | true | false | true | false |
+| `list_scale_options` | true | false | true | false |
+| `add_scale_option` | false | false | false | false |
 | `search_domains` | true | false | true | true |
 | `buy_domain` | false | false | false | true |
 | `attach_domain` | false | false | true | true |
@@ -128,6 +130,18 @@ Every tool on `https://takocode.com/api/mcp` sets all four MCP tool hints as exp
 - **destructiveHint: false** — No state is modified.
 - **idempotentHint: true** — Repeated calls have no additional effect.
 - **openWorldHint: false** — Internal database only.
+
+### `list_scale_options` — List scale options
+- **readOnlyHint: true** — Reads the infrastructure catalogue and the project's current add-ons; writes nothing.
+- **destructiveHint: false** — No state is modified.
+- **idempotentHint: true** — Repeated calls have no additional effect.
+- **openWorldHint: false** — Internal catalogue and database only.
+
+### `add_scale_option` — Add a scale option (PAID, needs approval)
+- **readOnlyHint: false** — Provisions a dedicated database or Redis instance for the project and charges its monthly fee to the wallet.
+- **destructiveHint: false** — Purely additive: creates a new service next to what exists; the included database and existing data are untouched and nothing is replaced or deleted.
+- **idempotentHint: false** — A second call after success is refused because a project holds one add-on per type, but before success each approved call starts provisioning, so it is not declared idempotent.
+- **openWorldHint: false** — Provisioning happens inside TakoCode's own cloud account; no third-party service or public content is contacted.
 
 ### `search_domains` — Search domain availability
 - **readOnlyHint: true** — Checks availability and price of domain names; nothing is reserved or changed.

@@ -3,7 +3,7 @@
   "name": "com.takocode/takocode",
   "title": "TakoCode — AI app builder",
   "description": "Build, preview, publish and host full-stack web apps with TakoCode's coding agent; domains included.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "websiteUrl": "https://takocode.com/connect",
   "repository": {
     "url": "https://github.com/takocode-chimera/takocode-mcp",

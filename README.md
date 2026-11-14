@@ -45,6 +45,8 @@ Full guide: [takocode.com/connect](https://takocode.com/connect).
 | `export_github`        |           | all             | Push project source to the user's connected GitHub                          |
 | `publish_site`         | **paid**  | all             | Deploy to a permanent public URL (explicit user approval required)          |
 | `check_publish`        | read-only | all             | Deployment status + live URL                                                |
+| `list_scale_options`   | read-only | all             | Dedicated Postgres (up to 8 vCPU, optional high availability), Redis and publish sizing a project can grow into |
+| `add_scale_option`     | **paid**  | `/api/mcp` only | Add a dedicated database or Redis cache (owner approval on takocode.com required) |
 | `search_domains`       | read-only | all             | Domain availability + yearly pricing                                        |
 | `buy_domain`           |           | `/api/mcp` only | Stripe checkout link to register a domain (auto-attached after payment)     |
 | `attach_domain`        |           | all             | Connect a domain the user already owns (returns DNS records)                |
@@ -52,10 +54,11 @@ Full guide: [takocode.com/connect](https://takocode.com/connect).
 ## How it works
 
 - **Your assistant orchestrates; TakoCode builds.** The billable unit is an agent *turn*: one clear goal in, working code out. Long-running work is start/poll (`start_turn` → `check_turn`), so it survives client timeouts and disconnects.
-- **Money is never autonomous.** The assistant can never charge anyone: wallet top-ups and domain purchases return Stripe checkout links that only the human can complete, and publishing requires explicit user approval (plus per-user autonomy preferences and an optional monthly budget cap, enforced server-side).
-- **Two surfaces, one server.** `/api/mcp` is the full tool set. `/api/mcp/chatgpt` is the ChatGPT-directory surface: OpenAI's plugin guidelines do not allow directory plugins to sell credits, subscriptions or domains, promote upgrades, or link to checkout pages, so that surface omits `top_up_wallet` and `buy_domain` and describes entitlement gaps as "not available with the account's current membership or balance" with an informational link to the plans page only. Builds and publishing use the prepaid credits already on the account on both surfaces.
+- **Money is never autonomous.** The assistant can never charge anyone: wallet top-ups and domain purchases return Stripe checkout links that only the human can complete, and publishing or adding infrastructure requires the account owner's own approval tap on takocode.com — a `confirm` flag from the model is never enough (plus per-user autonomy preferences and an optional monthly budget cap, enforced server-side).
+- **Two surfaces, one server.** `/api/mcp` is the full tool set. `/api/mcp/chatgpt` is the ChatGPT-directory surface: OpenAI's plugin guidelines do not allow directory plugins to sell credits, subscriptions or domains, promote upgrades, or link to checkout pages, so that surface omits `top_up_wallet`, `buy_domain` and `add_scale_option` and describes entitlement gaps as "not available with the account's current membership or balance" with an informational link to the plans page only. Builds and publishing use the prepaid credits already on the account on both surfaces.
 - **Every tool carries all four MCP annotations** (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint` as explicit booleans, plus `title`) so clients can gate confirmations appropriately. The per-tool values and the reasoning behind each are in [docs/TOOL-ANNOTATIONS.md](docs/TOOL-ANNOTATIONS.md).
-- **The tool catalogue is public.** `tools/list` and `ping` answer without authentication (names, descriptions, schemas, annotations only); every other method returns the OAuth challenge. Registries and directories can therefore list the 20 tools without an account.
+- **The tool catalogue is public.** `tools/list` and `ping` answer without authentication (names, descriptions, schemas, annotations only); every other method returns the OAuth challenge. Registries and directories can therefore list the 22 tools without an account.
+- **Apps can grow without leaving.** Each project starts on an included Postgres database and autoscaling hosting (up to 4 vCPU / 4 GB per instance, 30 instances, 13 regions). `list_scale_options` shows the dedicated Postgres sizes (up to 8 vCPU / 32 GB, optional high availability with automatic failover and point-in-time recovery) and Redis caches (optional automatic failover) a project can add. Each project's Redis is network-isolated: only that project's published app can reach it.
 
 ## Security & privacy
 
